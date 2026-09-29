@@ -1,0 +1,8 @@
+{
+  "name": "PaperForge Studio",
+  "description": "Cross-platform offline-first question paper generator with dynamic institutional header engine, multi-tier blueprints, KaTeX formulas, and vector PDF compilation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
