@@ -1,9 +1,9 @@
 import React from 'react';
-import { Printer, Code2, Sparkles, BookOpen } from 'lucide-react';
+import { Printer, Code2, FileUp } from 'lucide-react';
 
 interface TopBarProps {
-  activeTab: 'editor' | 'preview' | 'bank';
-  onSelectTab: (tab: 'editor' | 'preview' | 'bank') => void;
+  activeTab: 'editor' | 'preview' | 'bank' | 'sources';
+  onSelectTab: (tab: 'editor' | 'preview' | 'bank' | 'sources') => void;
   onOpenFlutterCode: () => void;
   onPrint: () => void;
   viewportMode: 'desktop' | 'mobile';
@@ -47,6 +47,17 @@ export const TopBar: React.FC<TopBarProps> = ({
           }`}
         >
           Blueprint Studio
+        </button>
+        <button
+          type="button"
+          onClick={() => onSelectTab('sources')}
+          className={`px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+            activeTab === 'sources'
+              ? 'text-indigo-600 bg-indigo-50 font-semibold'
+              : 'hover:text-slate-900'
+          }`}
+        >
+          <FileUp className="mr-1 inline h-3.5 w-3.5" /> Sources
         </button>
         <button
           type="button"

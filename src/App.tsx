@@ -9,6 +9,8 @@ import { QuestionBankModal } from './components/QuestionBankModal';
 import { AutoGeneratorModal } from './components/AutoGeneratorModal';
 import { FlutterExportViewer } from './components/FlutterExportViewer';
 import { MobileWizard } from './components/MobileWizard';
+import { SourceWorkspace } from './components/SourceWorkspace';
+import { SourceDocument } from './types/source';
 import { 
   Building2, 
   Layers, 
@@ -22,6 +24,7 @@ import {
 
 const STORAGE_KEY_DOC = 'paperforge_studio_active_doc_v1';
 const STORAGE_KEY_BANK = 'paperforge_studio_question_bank_v1';
+const STORAGE_KEY_SOURCES = 'paperforge_studio_sources_v1';
 
 export default function App() {
   // Load initial document from localStorage or fallback to pre-seeded default
@@ -46,8 +49,18 @@ export default function App() {
     return INITIAL_QUESTION_BANK;
   });
 
+  const [sourceDocuments, setSourceDocuments] = useState<SourceDocument[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SOURCES);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore malformed local data
+    }
+    return [];
+  });
+
   // Navigation states
-  const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'bank'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'bank' | 'sources'>('editor');
   const [editorSubTab, setEditorSubTab] = useState<'header' | 'blueprint'>('header');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop');
 
@@ -73,6 +86,14 @@ export default function App() {
       console.warn('Bank storage sync failed', e);
     }
   }, [questionBank]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_SOURCES, JSON.stringify(sourceDocuments));
+    } catch (e) {
+      console.warn('Source workspace sync failed', e);
+    }
+  }, [sourceDocuments]);
 
   // Responsive layout listener
   useEffect(() => {
@@ -199,7 +220,13 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden">
-        {viewportMode === 'mobile' ? (
+        {activeTab === 'sources' ? (
+          <div className="h-[calc(100vh-57px)] overflow-y-auto bg-slate-50 p-4 sm:p-6">
+            <div className="mx-auto max-w-5xl">
+              <SourceWorkspace documents={sourceDocuments} onChange={setSourceDocuments} />
+            </div>
+          </div>
+        ) : viewportMode === 'mobile' ? (
           /* Mobile View: 4-Step Wizard Workflow (< 600px width or mobile toggle) */
           <MobileWizard
             document={document}
