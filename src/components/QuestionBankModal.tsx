@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Question, Section, QuestionType, BloomLevel, DifficultyLevel } from '../types/paper';
 import { MathRenderer, COMMON_MATH_SYMBOLS } from '../utils/latexHelper';
 import { 
@@ -44,6 +44,12 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   const [activeSectionChoice, setActiveSectionChoice] = useState<string>(
     targetSectionId || sections[0]?.id || ''
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveSectionChoice(targetSectionId || sections[0]?.id || '');
+    }
+  }, [isOpen, targetSectionId, sections]);
 
   // Form state for creating/editing a question
   const [formText, setFormText] = useState('');

@@ -143,6 +143,10 @@ export default function App() {
     setDocument(prev => {
       const updatedSections = prev.sections.map(sec => {
         if (sec.id === sectionId) {
+          if (sec.questions.length >= sec.totalQuestionsAvailable) {
+            window.alert(`This section is full. Increase the question capacity before inserting more questions.`);
+            return sec;
+          }
           return {
             ...sec,
             questions: [...sec.questions, { ...question, id: `q-${Date.now()}` }],
@@ -209,6 +213,16 @@ export default function App() {
           />
         ) : (
           /* Desktop View: Dual-Pane Adaptive Layout (>= 600px) */
+          activeTab === 'preview' ? (
+            <div className="h-[calc(100vh-57px)] overflow-y-auto bg-slate-200/80 p-6">
+              <div className="mx-auto w-full max-w-[840px]">
+                <PaperPreviewSheet
+                  document={document}
+                  onUpdateDocument={handleUpdateDocument}
+                />
+              </div>
+            </div>
+          ) : (
           <div className="h-[calc(100vh-57px)] flex overflow-hidden">
             {/* Left Pane: Interactive Form / Blueprint Builder (45% width) */}
             <div className="w-[45%] border-r border-slate-200 bg-slate-50 flex flex-col overflow-hidden">
@@ -294,6 +308,7 @@ export default function App() {
               </div>
             </div>
           </div>
+          )
         )}
       </main>
 
