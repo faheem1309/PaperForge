@@ -1,6 +1,7 @@
 import React from 'react';
 import { Section, Question, BloomLevel } from '../types/paper';
 import { MathRenderer } from '../utils/latexHelper';
+import { validateBlueprint } from '../utils/blueprintValidation';
 import { 
   Plus, 
   Trash2, 
@@ -42,17 +43,9 @@ export const BlueprintBuilder: React.FC<BlueprintBuilderProps> = ({
   onOpenAutoGenerator,
   onEditQuestion,
 }) => {
-  // Calculate planned marks from sections: sum of (totalQuestionsToAttempt * marksPerQuestion)
-  const plannedMarks = sections.reduce(
-    (sum, sec) => sum + (sec.totalQuestionsToAttempt * sec.marksPerQuestion),
-    0
-  );
-
-  // Actual marks of all currently placed questions (considering questions to attempt)
-  const currentTotalQuestions = sections.reduce((sum, sec) => sum + sec.questions.length, 0);
-
-  const marksDelta = plannedMarks - maxPaperMarks;
-  const isReconciled = marksDelta === 0;
+  const qualityReport = validateBlueprint(sections, maxPaperMarks);
+  const marksDelta = qualityReport.plannedMarks - maxPaperMarks;
+  const isReconciled = qualityReport.issues.every(issue => issue.severity !== 'error');
 
   const handleAddSection = () => {
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
@@ -145,12 +138,12 @@ export const BlueprintBuilder: React.FC<BlueprintBuilderProps> = ({
               <div className="text-sm font-semibold flex items-center gap-2">
                 <span>Automatic Mark Reconciliation</span>
                 <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white/80 border border-current">
-                  {plannedMarks} / {maxPaperMarks} Marks
+                  {qualityReport.attainableMarks} / {maxPaperMarks} Marks
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-0.5">
                 {isReconciled ? (
-                  'Blueprint rules perfectly match the target examination maximum marks.'
+                  `Blueprint is structurally valid. ${qualityReport.filledQuestionCount} of ${qualityReport.expectedQuestionCount} printed question slots are filled.`
                 ) : marksDelta > 0 ? (
                   `Surplus detected: Section blueprint offers +${marksDelta} marks more than paper maximum (${maxPaperMarks} Marks).`
                 ) : (
@@ -170,6 +163,38 @@ export const BlueprintBuilder: React.FC<BlueprintBuilderProps> = ({
               1-Click Blueprint Generator
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Quality report */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+        <div className="xl:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Live quality checks</h3>
+              <p className="text-xs text-slate-500">Deterministic checks based on the current paper data.</p>
+            </div>
+            <span className="text-xs font-mono text-slate-500">{qualityReport.filledQuestionCount}/{qualityReport.expectedQuestionCount} slots</span>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {qualityReport.issues.length === 0 ? (
+              <div className="text-xs text-emerald-700">No structural issues detected.</div>
+            ) : qualityReport.issues.slice(0, 6).map((issue, index) => (
+              <div key={`${issue.code}-${index}`} className={`rounded-lg px-3 py-2 text-xs ${issue.severity === 'error' ? 'bg-rose-50 text-rose-800' : issue.severity === 'warning' ? 'bg-amber-50 text-amber-800' : 'bg-sky-50 text-sky-800'}`}>
+                <span className="font-semibold uppercase tracking-wide">{issue.severity}:</span> {issue.message}
+              </div>
+            ))}
+            {qualityReport.issues.length > 6 && <div className="text-[11px] text-slate-500">+{qualityReport.issues.length - 6} more checks shown as you resolve the current issues.</div>}
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <h3 className="text-sm font-semibold text-slate-900">Coverage snapshot</h3>
+          <div className="mt-3 space-y-2 text-xs">
+            {qualityReport.coverage.length === 0 ? <span className="text-slate-500">Add questions to calculate topic coverage.</span> : qualityReport.coverage.slice(0, 5).map(item => (
+              <div key={item.label} className="flex items-center justify-between gap-3"><span className="truncate text-slate-600">{item.label}</span><span className="font-mono font-semibold text-slate-800">{item.marks}M</span></div>
+            ))}
+          </div>
+          <div className="mt-4 border-t border-slate-100 pt-3 text-[11px] text-slate-500">Difficulty: {qualityReport.difficulty.map(item => `${item.label} ${item.count}`).join(' · ') || '—'}</div>
         </div>
       </div>
 
